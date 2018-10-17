@@ -1,7 +1,8 @@
-#include <QDebug>
-#include <QVector>
+﻿#include <QDebug>
+#include <QCoreApplication>
 #include <QTextStream>
 #include <QFile>
+#include <QList>
 
 namespace SK {
 enum SortKind{
@@ -87,21 +88,38 @@ bool myCmp::operator()(const studData &d1, const studData &d2)
 
 class ScoreSorter
 {
-public:
+
+  public:
+
     ScoreSorter(QString dataFile);
-    // ...
-    // 请补全该类，使其实现上述要求
-    // ...
+
+    void readFile();
+
+    void doSort();
+
+private:
+
+    QString Fileroute;
+
+    QList<studData > data;
+
+    studData listtitle;
 }
 
 // 请补全
-ScoreSorter::ScoreSorter(QString dataFile){
+ScoreSorter::ScoreSorter(QString dataFile)
+{
+this->Fileroute=dataFile;
 }
 
 
-void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
+ void ScoreSorter::readfile()
 {
-    // 自定义qDebug
+     QFile file(this->Fileroute);   //只读方式打开文件
+
+    if(!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+
+        qDebug()<<"Can't open the file!"<<endl;
 }
 
 int main()
