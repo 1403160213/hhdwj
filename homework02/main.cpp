@@ -106,7 +106,8 @@ private:
     studData listtitle;
 }
 
-// 请补全
+
+
 ScoreSorter::ScoreSorter(QString dataFile)
 {
 this->Fileroute=dataFile;
@@ -120,11 +121,62 @@ this->Fileroute=dataFile;
     if(!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
 
         qDebug()<<"Can't open the file!"<<endl;
+
+
+         studData tempstudent;
+
+        QString Title(mfile.readLine());
+
+        title= Title.split(" ", QString::SkipEmptyParts);
+
+    while(!mfile.atEnd()) {
+
+        QString str(mfile.readLine());
+
+        tempstudent.st = str.split(" ", QString::SkipEmptyParts);
+
+        if((tempstudent.st).last() == "\n") tempstudent.st.removeLast();
+
+        if(tempstudent.st.size()==0) continue;
+
+        student.append(tempstudent);
+
+    }
+
+    mfile.close();
+
 }
+
+
+void ScoreSorter::doSort()
+
+{
+
+    myCmp cmp_temp(N-1);
+
+    std::sort(student.begin(),student.end(),cmp_temp);
+
+    title.removeLast();                             
+
+    qDebug() << ' '<<title;
+
+
+
+    for(int k=0;k<student.size();k++)
+
+    {
+
+        qDebug()<<student.at(k);
+
+    }
+
+}
+}
+
 
 int main()
 {
-    qInstallMessageHandler(myMessageOutput);
+    
     QString datafile = "data.txt";
 
     // 如果排序后文件已存在，则删除之
