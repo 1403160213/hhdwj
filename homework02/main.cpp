@@ -82,7 +82,6 @@ bool myCmp::operator()(const studData &d1, const studData &d2)
                 break;
     }
     return result;
-
 }
 
 
@@ -90,6 +89,7 @@ class ScoreSorter
 {
 
   public:
+    QString datafile;
 
     ScoreSorter(QString dataFile);
 
@@ -104,6 +104,8 @@ private:
     QList<studData > data;
 
     studData listtitle;
+
+    void printfile(quint8 t);
 }
 
 
@@ -114,13 +116,13 @@ this->Fileroute=dataFile;
 }
 
 
- void ScoreSorter::readfile()
+ void ScoreSorter::readFile()
 {
      QFile file(this->Fileroute);   //只读方式打开文件
 
     if(!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
 
-        qDebug()<<"Can't open the file!"<<endl;
+        qDebug()<<"Can't open the file"<<endl;
 
 
          studData tempstudent;
@@ -147,31 +149,91 @@ this->Fileroute=dataFile;
 
 }
 
-
 void ScoreSorter::doSort()
 
 {
 
-    myCmp cmp_temp(N-1);
-
-    std::sort(student.begin(),student.end(),cmp_temp);
-
-    title.removeLast();                             
-
-    qDebug() << ' '<<title;
-
-
-
-    for(int k=0;k<student.size();k++)
+    for(int k=1; k<this->txttitle.stud.size(); k++)
 
     {
 
-        qDebug()<<student.at(k);
+        myCmp mycmp(k-1);    //初始化对象
+
+        std::sort(this->date.begin() , this->date.end() , mycmp );  //排序
+
+
+
+        qDebug()<<"排序后输出，当前排序第 "<< k+1 <<" 列：";
+
+        qDebug()<< "   "<<(this->listtitle);  
+
+
+
+        for(int k=0;k<this->date.size();k++)  qDebug() << this->date.at(k);
+
+        qDebug()<<"-----------------------------------------------------------------------------------------\n";
+
+
+
+        this->printfile(k+1); //排序data 输出到文件
 
     }
 
 }
+void ScoreSorter::printfile(quint8 t)
+
+{
+
+    QFile file("sorted_"+this->dataroute);
+
+
+
+    file.open(QIODevice::ReadWrite | QIODevice::Append);
+
+
+
+    QTextStream stream(&file);
+
+    stream.setCodec("UTF-8"); 
+
+    stream<<QString("排序后输出，当前排序第 ")<<currentColumn <<QString(" 列：")<<"\r\n";
+
+
+
+    for(int m=0;m<this->listtitle.stud.size();m++)
+
+    {
+
+        stream<<"   "<<this->listtitle.stud.at(m);
+
+    }
+
+        stream<<"\r\n";
+
+
+
+    for(int p=0;p<this->date.size();i++)            //输出内容
+
+    {
+
+        for(int p=0;p<this->listtitle.stud.size();p++)
+
+        stream<<this->date.at(p).stud.at(m)<<"\t";
+
+        stream<<"\r\n";
+
+    }
+
+
+
+
+
+    stream<<"------------------------------------------------------------------"<<"\r\n\r\n";
+
+    file.close();
+
 }
+
 
 
 int main()
