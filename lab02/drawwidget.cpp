@@ -2,6 +2,7 @@
 #include <QMouseEvent>
 #include <QPen>
 #include <QMessageBox>
+#include <QDateTime>
 
 
  DrawWidget::DrawWidget(QWidget *parent) : QWidget(parent)
@@ -112,6 +113,48 @@
   // 清除绘图内容，简单的用背景色填充整个画布即可
   pix->fill(BACKGROUND_COLOR);
   update ();
+ }
+
+ void DrawWidget::increase()
+
+ {
+
+     QImage iconImage;
+
+     iconImage.load(":/picture");
+
+     QPixmap *newPix = new QPixmap(size());
+
+     *newPix=QPixmap(*this->pix);             //新的pix拷贝原内容,避免之前所画内容丢失
+
+     *pix = QPixmap::fromImage(iconImage.scaledToWidth(pix->size().width()*0.5 , Qt::FastTransformation));
+
+     QPainter p(newPix);                             //添加图片.
+
+     p.drawPixmap (QPoint((width()-pix->width())/2,(height()-pix->width())/2), *pix);
+
+     delete pix;
+
+     pix = newPix;
+
+     update();
+
+ }
+
+
+
+ void DrawWidget::save()
+
+ {
+
+     QDateTime current_date_time =QDateTime::currentDateTime();
+
+     QString currentDate =current_date_time.toString("yyyy-MM-dd_hh-mm-ss");
+
+     QString fileName=tr("F:/lab02_%1.png").arg(currentDate);
+
+     this->pix->save(fileName);                                                  //保存文件
+
  }
 
  void DrawWidget::setShapeType(ST::ShapeType type)
@@ -230,6 +273,27 @@
   painter.drawPolygon(points);
   }
   break;
+      //绘制菱形图案
+
+        case ST::Diamond:{
+
+            QPointF pt11(ptEnd.x(),(ptStart.y()+ptEnd.y())/2);
+
+            QPointF pt22((ptStart.x()+ptEnd.x())/2,ptStart.y());
+
+            QPointF pt33(ptStart.x(),(ptStart.y()+ptEnd.y())/2);
+
+            QPointF pt44((ptStart.x()+ptEnd.x())/2,ptEnd.y());
+
+            QVector<QPointF> pts0;
+
+            pts0<<pt11<<pt22<<pt22<<pt33<<pt33<<pt44<<pt44<<pt11;
+
+        painter.drawPolygon(pts0);
+
+       }
+
+            break;
   case ST::Text:{
 
   if(drawnText.isEmpty()){
