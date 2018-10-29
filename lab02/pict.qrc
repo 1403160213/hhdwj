@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/new/prefix1">
+        <file alias="picture01">新建文件夹/IMG_20180112_102757.jpg</file>
+    </qresource>
+</RCC>

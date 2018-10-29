@@ -52,7 +52,7 @@ public slots:
 
     void clearPaint();
 
-    void saveGraph();
+    void savepicture();
 
 
 

@@ -34,3 +34,6 @@ HEADERS += \
     common.h \
     centerframe.h \
     drawwidget.h
+
+RESOURCES += \
+    pict.qrc

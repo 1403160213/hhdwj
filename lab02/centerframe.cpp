@@ -27,11 +27,8 @@ createUI();
 
 
 DrawWidget *CenterFrame::insideWidget() const
-
 {
-
 return drawWidget;
-
 }
 
 
@@ -41,15 +38,11 @@ void CenterFrame::createUserCommandArea()
 
 {
 
-
-
 // 选项Group
 
 group = new QGroupBox(this);
 
 group->setTitle(tr("选项"));
-
-
 
 int btnWidth=32;
 
@@ -155,8 +148,6 @@ p.fill(FOREGROUND_COLOR);
 
   btnTriangle->setIconSize(p.size());
 
-
-
   p.fill(FOREGROUND_COLOR);
 
   // 三角形的三个顶点
@@ -195,7 +186,7 @@ p.fill(FOREGROUND_COLOR);
 
   btnDiamond->setIconSize(p.size());
 
-  //菱形的四个顶点
+  //四个顶点
 
   p.fill(FOREGROUND_COLOR);
 
@@ -257,7 +248,7 @@ p.fill(FOREGROUND_COLOR);
 
 
 
-  //图片按钮
+  //添加图片按钮
 
   imgBtn= new QPushButton(group);
 
@@ -265,13 +256,13 @@ p.fill(FOREGROUND_COLOR);
 
   imgBtn->setIconSize(p.size());
 
-  imgBtn->setToolTip("绘制图片文件");
+  imgBtn->setToolTip("添加绘制图片文件");
 
   QPixmap pixmap(p.size());
 
   QPainter paint(&pixmap);
 
-  QImage image(":/picture");
+  QImage image(":/picture01");
 
   QRect targetRect(0,0,p.size().width(),p.size().height());
 
@@ -543,7 +534,7 @@ p.fill(FOREGROUND_COLOR);
 
  }
 
- void CenterFrame::saveGraph()
+ void CenterFrame::savepicture()
 
  {
 
@@ -695,10 +686,11 @@ void CenterFrame::on_imgBtnClicked()
 
  if(imgBtn->isChecked()){
 
-   drawWidget->increase() ;           //检查,被按下则画图
+     drawWidget->setShapeType(ST::picture);
 
-   updateButtonStatus();
+                  drawWidget->add();
 
+                  updateButtonStatus();
  }else{
 
    drawWidget->setShapeType(ST::None);

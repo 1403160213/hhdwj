@@ -2,6 +2,7 @@
 #include <QMouseEvent>
 #include <QPen>
 #include <QMessageBox>
+#include<QFileDialog>
 #include <QDateTime>
 
 
@@ -108,28 +109,23 @@
  }
 
 
- void DrawWidget::clear ()
- {
-  // 清除绘图内容，简单的用背景色填充整个画布即可
-  pix->fill(BACKGROUND_COLOR);
-  update ();
- }
 
- void DrawWidget::increase()
+
+ void DrawWidget::add()
 
  {
 
      QImage iconImage;
 
-     iconImage.load(":/picture");
+     QString filename=QFileDialog::getOpenFileName(this,tr("选择图片"),"",tr("Images (*.png *.bmp *.jpg)"));
 
      QPixmap *newPix = new QPixmap(size());
 
-     *newPix=QPixmap(*this->pix);             //新的pix拷贝原内容,避免之前所画内容丢失
+     *newPix=QPixmap(*this->pix);
 
      *pix = QPixmap::fromImage(iconImage.scaledToWidth(pix->size().width()*0.5 , Qt::FastTransformation));
 
-     QPainter p(newPix);                             //添加图片.
+     QPainter p(newPix);
 
      p.drawPixmap (QPoint((width()-pix->width())/2,(height()-pix->width())/2), *pix);
 
@@ -139,6 +135,13 @@
 
      update();
 
+ }
+
+ void DrawWidget::clear ()
+ {
+  // 清除绘图内容
+  pix->fill(BACKGROUND_COLOR);
+  update ();
  }
 
 
@@ -151,7 +154,7 @@
 
      QString currentDate =current_date_time.toString("yyyy-MM-dd_hh-mm-ss");
 
-     QString fileName=tr("F:/lab02_%1.png").arg(currentDate);
+     QString fileName=tr("D:/lab02_%1.png").arg(currentDate);
 
      this->pix->save(fileName);                                                  //保存文件
 
