@@ -118,7 +118,7 @@
      QImage iconImage;
 
      QString filename=QFileDialog::getOpenFileName(this,tr("选择图片"),"",tr("Images (*.png *.bmp *.jpg)"));
-
+     iconImage.load(filename);
      QPixmap *newPix = new QPixmap(size());
 
      *newPix=QPixmap(*this->pix);

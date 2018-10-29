@@ -262,7 +262,7 @@ p.fill(FOREGROUND_COLOR);
 
   QPainter paint(&pixmap);
 
-  QImage image(":/picture01");
+  QImage image("D:/971224/hhdwj/lab02/picture/IMG_20180112_102757.jpg");
 
   QRect targetRect(0,0,p.size().width(),p.size().height());
 
