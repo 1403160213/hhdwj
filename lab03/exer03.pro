@@ -4,12 +4,13 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
-QT		+= charts network
+QT += core gui
+QT += charts network
+QT += charts
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = protect03
+TARGET = exer03
 TEMPLATE = app
 
 
@@ -18,10 +19,6 @@ SOURCES += main.cpp\
     dataworker.cpp
 
 HEADERS  += mainwidget.h \
-    dataworker.h \ 
-    common.h
+    dataworker.h 
 
 FORMS    += mainwidget.ui
-
-RC_ICONS = logo.ico
-

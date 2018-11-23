@@ -6,24 +6,31 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>743</width>
-    <height>588</height>
+    <width>882</width>
+    <height>630</height>
    </rect>
-  </property>
-  <property name="maximumSize">
-   <size>
-    <width>16777215</width>
-    <height>588</height>
-   </size>
   </property>
   <property name="windowTitle">
    <string>实验三 网络数据获取与显示</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_2">
+   <item row="7" column="1">
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
    <item row="4" column="1">
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
-      <string>选项</string>
+      <string>显示选项 </string>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
@@ -66,15 +73,11 @@
       <string>查询选项</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="0">
-       <widget class="QRadioButton" name="radioButton">
-        <property name="text">
-         <string>查询气温</string>
-        </property>
-       </widget>
-      </item>
       <item row="1" column="0">
-       <widget class="QRadioButton" name="radioButton_2">
+       <widget class="QRadioButton" name="btnAQI">
+        <property name="acceptDrops">
+         <bool>false</bool>
+        </property>
         <property name="text">
          <string>查询AQI</string>
         </property>
@@ -83,71 +86,24 @@
         </property>
        </widget>
       </item>
+      <item row="0" column="0">
+       <widget class="QRadioButton" name="btnWeather">
+        <property name="text">
+         <string>查询气温</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
-   <item row="7" column="1">
-    <spacer name="verticalSpacer">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>40</height>
-      </size>
-     </property>
-    </spacer>
+   <item row="0" column="0" rowspan="8">
+    <widget class="QtCharts::QChartView" name="chartview"/>
    </item>
-   <item row="0" column="1">
-    <widget class="QLabel" name="label">
+   <item row="2" column="1">
+    <widget class="QLabel" name="date">
      <property name="text">
       <string>选择时间</string>
      </property>
-    </widget>
-   </item>
-   <item row="1" column="1">
-    <widget class="QComboBox" name="comboMonth"/>
-   </item>
-   <item row="2" column="1">
-    <widget class="QLabel" name="label_2">
-     <property name="text">
-      <string>选择城市</string>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="1">
-    <widget class="QComboBox" name="comboLocation">
-     <item>
-      <property name="text">
-       <string>杭州</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>扬州</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>南京</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>上海</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>深圳</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>北京</string>
-      </property>
-     </item>
     </widget>
    </item>
    <item row="6" column="1">
@@ -159,12 +115,22 @@
       </sizepolicy>
      </property>
      <property name="text">
-      <string>开始查询</string>
+      <string>开始</string>
      </property>
     </widget>
    </item>
-   <item row="0" column="0" rowspan="8">
-    <widget class="QtCharts::QChartView" name="chartview"/>
+   <item row="0" column="1">
+    <widget class="QLabel" name="city">
+     <property name="text">
+      <string>选择城市</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QComboBox" name="comboCity"/>
+   </item>
+   <item row="3" column="1">
+    <widget class="QComboBox" name="comboMonth"/>
    </item>
   </layout>
  </widget>

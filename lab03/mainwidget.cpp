@@ -1,17 +1,8 @@
 #include "mainwidget.h"
 #include "ui_mainwidget.h"
-#include <dataworker.h>
+#include "dataworker.h"
 #include <QDateTime>
-#include <QDate>
-#include "common.h"
 
-enum DataType datatype;
-/**
- * @brief 主窗口构造函数
- * @param parent 父窗口指针
- *
- * 负责初始化图表、下拉框，创建数据解析工作类dataWorker并连接相应的信号与槽。
- */
 mainWidget::mainWidget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::mainWidget)
@@ -19,17 +10,14 @@ mainWidget::mainWidget(QWidget *parent) :
     ui->setupUi(this);
     ui->chartview->setRenderHint(QPainter::Antialiasing);
 
-
+    initComboCity();
     initComboMonth();
 
-    resetChart("请进行设置");
+    resetChart("南京气温");
     addLineSeries(ui->chartview->chart(),"",Qt::red);
 
     worker = new dataWorker(this);
     connect(worker,&dataWorker::dataParseFinished,this,&mainWidget::updateDataChart);
-    connect(worker,&dataWorker::dataParseError,this,&mainWidget::on_dataError);
-    connect(worker,&dataWorker::httpRequestError,this,&mainWidget::on_dataError);
-
 
 }
 
@@ -38,26 +26,46 @@ mainWidget::~mainWidget()
     delete ui;
 }
 
-/**
- * @brief 初始化下拉框
- *
- */
+
+//void mainWidget::initComboMonth()
+//{
+//    QStringList month;
+//    for(int i=10;i>0;i--){
+//        month<<QString("2018-%1").arg(i,2,10,QChar('0'));
+//    }
+//    ui->comboMonth->clear();
+//    ui->comboMonth->addItems(month);
+
+//}
+
 void mainWidget::initComboMonth()
 {
-    QDate date=QDate::currentDate();
-    //QDate date_begin=QDate::addMonths(-10);
-    QStringList month;
-    for(int i=10;i>0;i--){
-        // 此处为固定时间和日期
-        // 请使用QDate/QDateTime将其修正，
-        // 用户运行前一个月开始连续10个月的"年-月"
-        // (如2018-02、2018-01、2017-12...，假设当前日期为2018年3月12日)
-        date=date.addMonths(-1);
-//        qDebug()<<date.month();
-        month<<QString("%1-%2").arg(date.year()).arg(date.month(),2,10,QChar('0'));
-    }
     ui->comboMonth->clear();
-    ui->comboMonth->addItems(month);
+    for(int i=1;i<=10;i++){
+        ui->comboMonth->addItem(QDateTime::currentDateTime().addMonths(-i).toString("yyyy-MM"));
+    }
+
+}
+
+void mainWidget::initComboCity()
+{
+//    ui->comboCity->addItem("南京");
+//    ui->comboCity->addItem("北京");
+//    ui->comboCity->addItem("上海");
+//    ui->comboCity->addItem("苏州");
+//    ui->comboCity->addItem("扬州");
+
+//    ui->comboCity->setCurrentIndex(0);
+    QStringList city;
+    QStringList pinyin;
+
+    city<<"南京"<<"北京"<<"上海"<<"苏州"<<"扬州";
+    pinyin<<"nanjing"<<"beijing"<<"shanghai"<<"suzhou"<<"yangzhou";
+
+    ui->comboCity->clear();
+    for(int i=0;i<city.count();i++){
+        ui->comboCity->addItem(city.at(i),pinyin.at(i));
+    }
 
 }
 
@@ -104,7 +112,6 @@ void mainWidget::resetChart(const QString &title)
 /**
  * @brief 向Chart中添加序列（Series）
  * @param chart 指向QChart对象指针
- * @param seriesName 序列名称
  * @param color 序列颜色
  * @param lineWidth 序列线宽（默认值为1）
  */
@@ -135,21 +142,23 @@ void mainWidget::addLineSeries(QChart *chart, const QString &seriesName, const Q
         QDateTimeAxis *mAxisX = new QDateTimeAxis;
         mAxisX->setFormat("MM-dd");
         mAxisX->setTitleText("日期");
-        mAxisX->setTickCount(10+1);
+        mAxisX->setTickCount(9+1);
         mAxisX->setRange(QDateTime::currentDateTime().addMonths(-1),QDateTime::currentDateTime());
 
-        qreal highest,lowest;
-        worker->getYrange(&highest,&lowest);
         QValueAxis *mAxisY = new QValueAxis;
-        mAxisY->setRange(lowest,highest);
-        mAxisY->setLabelFormat("%g");
-        switch(datatype)
+
+        if(worker->switch_Num==0)
         {
-            case temperature:mAxisY->setTitleText("摄氏度(°C)");break;
-        case pm2:mAxisY->setTitleText("数值");break;
-        default:break;
+             mAxisY->setRange(-10,40);
+             mAxisY->setLabelFormat("%g");
+             mAxisY->setTitleText("摄氏度(°C)");
         }
 
+        if(worker->switch_Num==1)
+        {
+            mAxisY->setRange(0,100);
+            mAxisY->setTitleText("污染物指数");
+        }
 
         chart->setAxisX(mAxisX,series);
         chart->setAxisY(mAxisY,series);
@@ -175,15 +184,6 @@ void mainWidget::connectMarkers()
         disconnect(marker, &QLegendMarker::clicked, this, &mainWidget::handleMarkerClicked);
         connect(marker, &QLegendMarker::clicked, this, &mainWidget::handleMarkerClicked);
     }
-}
-
-enum DataType mainWidget::getDataType()
-{
-    if(ui->radioButton->isChecked())
-        datatype=temperature;
-    else if(ui->radioButton_2->isChecked())
-        datatype=pm2;
-    return datatype;
 }
 
 /**
@@ -248,111 +248,144 @@ void mainWidget::handleMarkerClicked()
     }
 }
 
-
-/**
- * @brief “开始”按键响应槽函数
- *
- * 该函数首先清理原图表，设置图表标题，然后调用后台数据工作类dataWorker进行数据的获取和解析工作。<br/>
- * dataWorker对象在设置请求年月参数后，发起HTTP的GET请求，在请求完成后以发射finished信号。<br/>
- * 在dataWorker对象的finished信号响应槽函数中，对网络数据进行解析，解析完成发射dataParseFinished信号，<br/>
- * 提醒界面进行图表更新工作。
- *
- */
 void mainWidget::on_btnStart_clicked()
 {
-    // 禁用两个按键
-    ui->comboMonth->setEnabled(false);
-    ui->btnStart->setEnabled(false);
-
-    //更新要查询数据类型标志位
-    getDataType();
-
-    // 设置chart的标题
-    QString chartTitle = "";
-    if(ui->comboMonth->count()>0){
-        chartTitle = ui->comboMonth->currentText().replace("-","年");
-        chartTitle.append(QString("月 %1").arg(ui->comboLocation->currentText()));
-    }else{
-        chartTitle=QString("%1").arg(ui->comboLocation->currentText());
-    }
-    switch(datatype)
+    //查询气温
+    if(ui->btnWeather->isChecked())
     {
-        case temperature:chartTitle.append("温度");break;
-    case pm2:chartTitle.append("空气情况");break;
-    default:break;
-    };
-    resetChart(chartTitle);
+        QString chartTitle = "";
 
-    // 设置dataWorker对象的请求年月
-    worker->setRequestDate(ui->comboMonth->currentText());
-    //设置dataWorker对象的请求地区
-    worker->setRequestLocation(ui->comboLocation->currentIndex());
-    // 发起HTTP请求
-    worker->doRequest();
+        if(ui->comboMonth->count()>0){
+            chartTitle = ui->comboMonth->currentText().replace("-","年");
+            QString city=ui->comboCity->currentText();
+            city=city+"气温";
+            chartTitle.append("月 "+city);
+        }else{
+            chartTitle="南京气温";
+        }
+
+        resetChart(chartTitle);
+
+        // 设置dataWorker对象的请求年月
+        worker->setRequestDate(ui->comboMonth->currentText());
+        worker->setRequestCity(ui->comboCity->currentData().toString());
+        worker->setSwitchNum(0);
+
+        // 发起HTTP请求
+        worker->doRequest();
+    }
+
+
+    //查询AQI
+    if(ui->btnAQI->isChecked())
+    {
+        QString chartTitle = "";
+
+        if(ui->comboMonth->count()>0){
+            chartTitle = ui->comboMonth->currentText().replace("-","年");
+            QString city=ui->comboCity->currentText();
+            city=city+"空气质量";
+            chartTitle.append("月 "+city);
+        }else{
+            chartTitle="南京空气质量";
+        }
+
+        resetChart(chartTitle);
+
+        // 设置dataWorker对象的请求年月
+        worker->setRequestDate(ui->comboMonth->currentText());
+        worker->setRequestCity(ui->comboCity->currentData().toString());
+        worker->setSwitchNum(1);
+
+        // 发起HTTP请求
+        worker->doRequest();
+    }
 
 }
 
-
-/**
- * @brief dataWorker对象的dataParseFinished信号响应槽函数
- * @param date 数据点时间
- * @param tempHigh 数据点的最高温度
- * @param tempLow  数据点的最低温度
- *
- * 该函数执行具体的数据更新工作，将dataWorker对象解析的数据插入序列中，并更新图表。
- * 更新完成后，使能两个按键，使用户可以发起下一次请求。
- */
 void mainWidget::updateDataChart(QList<QDateTime> date, QList<qreal> tempHigh, QList<qreal> tempLow)
 {
     QChart* chart = ui->chartview->chart();
 
-    // 添加第一条数据曲线
-    switch(datatype)
+    if(worker->switch_Num==0)
     {
-    case temperature:addLineSeries(chart,"日最高温度",Qt::red,2);break;
-    case pm2:addLineSeries(chart,"AQI数值",Qt::red,2);break;
-    default:break;
-    };
-    QLineSeries* seriesHigh = qobject_cast<QLineSeries*> (chart->series().last());
-    seriesHigh->setPointsVisible(ui->cbShowPoint->isChecked());
+        // 添加第一条数据曲线
+        addLineSeries(chart,"日最高温度",Qt::red,2);
+        QLineSeries* seriesHigh = qobject_cast<QLineSeries*> (chart->series().last());
+        seriesHigh->setPointsVisible(ui->cbShowPoint->isChecked());
 
-    // 添加第二条数据曲线
-    switch(datatype)
-    {
-    case temperature:addLineSeries(chart,"日最低温度",Qt::blue,2);break;
-    case pm2:addLineSeries(chart,"PM2.5数值",Qt::blue,2);break;
-    default:break;
-    };
-    QLineSeries* seriesLow = qobject_cast<QLineSeries*> (chart->series().last());
-    seriesLow->setPointsVisible(ui->cbShowPoint->isChecked());
+        // 添加第二条数据曲线
+        addLineSeries(chart,"日最低温度",Qt::blue,2);
+        QLineSeries* seriesLow = qobject_cast<QLineSeries*> (chart->series().last());
+        seriesLow->setPointsVisible(ui->cbShowPoint->isChecked());
 
-    // 向每条曲线中添加数据
-    for (int i=0; i<date.count();i++){
-        seriesHigh->append(date.at(i).toMSecsSinceEpoch(),tempHigh.at(i));
-        seriesLow->append(date.at(i).toMSecsSinceEpoch(),tempLow.at(i));
+        // 向每条曲线中添加数据
+        for (int i=0; i<date.count();i++){
+            seriesHigh->append(date.at(i).toMSecsSinceEpoch(),tempHigh.at(i));
+            seriesLow->append(date.at(i).toMSecsSinceEpoch(),tempLow.at(i));
+        }
+
+        // 设置坐标轴
+        QDateTimeAxis *mAxisX = qobject_cast<QDateTimeAxis*>(chart->axisX());
+        mAxisX->setRange(date.first(),date.last());
+
+        connectMarkers();
+        // 显示图注
+        chart->legend()->show();
+        // 更新图表
+        chart->update();
     }
 
-    // 设置坐标轴
-    QDateTimeAxis *mAxisX = qobject_cast<QDateTimeAxis*>(chart->axisX());
-    mAxisX->setRange(date.first(),date.last());
+    if(worker->switch_Num==1)
+    {
+        // 添加第一条数据曲线
+        addLineSeries(chart,"AQI",Qt::red,2);
+        QLineSeries* seriesAQI = qobject_cast<QLineSeries*> (chart->series().last());
+        seriesAQI->setPointsVisible(ui->cbShowPoint->isChecked());
 
-    connectMarkers();
-    // 显示图注
-    chart->legend()->show();
-    // 更新图表
-    chart->update();
+        // 添加第二条数据曲线
+        addLineSeries(chart,"PM2.5",Qt::blue,2);
+        QLineSeries* seriesPM25 = qobject_cast<QLineSeries*> (chart->series().last());
+        seriesPM25->setPointsVisible(ui->cbShowPoint->isChecked());
 
-    // 使能两个按钮
+        // 向每条曲线中添加数据
+        for (int i=0; i<date.count();i++){
+            seriesAQI->append(date.at(i).toMSecsSinceEpoch(),tempHigh.at(i));
+            seriesPM25->append(date.at(i).toMSecsSinceEpoch(),tempLow.at(i));
+        }
+
+        // 设置坐标轴
+        QDateTimeAxis *mAxisX = qobject_cast<QDateTimeAxis*>(chart->axisX());
+        mAxisX->setRange(date.first(),date.last());
+
+        QValueAxis *mAxisY = qobject_cast<QValueAxis*>(chart->axisY());
+
+        qreal max;
+        qreal min;
+
+        for (int i=0; i<date.count();i++)
+        {
+            if(max<tempHigh.at(i))
+                max=tempHigh.at(i);
+            if(min>tempLow.at(i))
+                min=tempLow.at(i);
+        }
+        mAxisY->setRange(min-15,max+15);
+
+        connectMarkers();
+        // 显示图注
+        chart->legend()->show();
+        // 更新图表
+        chart->update();
+
+    }
+
+    // 使能三个按钮
+    ui->comboCity->setEnabled(true);
     ui->comboMonth->setEnabled(true);
     ui->btnStart->setEnabled(true);
 }
 
-/**
- * @brief 显示数据点功能
- *
- * 显示数据点复选框的响应槽函数，当复选框选中时，通过设置series的PointsVisible属性实现。
- *
- */
 void mainWidget::on_cbShowPoint_clicked()
 {
     QChart* chart = ui->chartview->chart();
@@ -361,19 +394,9 @@ void mainWidget::on_cbShowPoint_clicked()
     }
 }
 
-
-/**
- * @brief 图注(Legend)对齐按键响应槽函数
- *
- * 该函数对当前图注的对齐方式进行修改的一个较好实现方法。<br/>
- * 首先获取信号发送者（sender()），并加入一个判断。如果该发送者是按键，那么修改按键标题，<br/>
- * 如果是程序内调用，即用代码实现位置的切换，那么此时就不能修改标题<br/>
- *
- */
 void mainWidget::on_btnLegendAlign_clicked()
 {
      QPushButton *button = qobject_cast<QPushButton *>(sender());
-
      QChart* chart = ui->chartview->chart();
      Qt::Alignment align = chart->legend()->alignment();
      switch (align) {
@@ -404,15 +427,10 @@ void mainWidget::on_btnLegendAlign_clicked()
      default:
          break;
      }
-     // 设置图注对齐方式
      chart->legend()->setAlignment(align);
 
 }
 
-
-/**
- * @brief 设置图注是否使用粗体显示
- */
 void mainWidget::on_cbLegendBold_clicked()
 {
     QChart* chart = ui->chartview->chart();
@@ -421,9 +439,6 @@ void mainWidget::on_cbLegendBold_clicked()
     chart->legend()->setFont(font);
 }
 
-/**
- * @brief 设置图注是否使用斜体显示
- */
 void mainWidget::on_cbLegendItalic_clicked()
 {
     QChart* chart = ui->chartview->chart();
@@ -432,20 +447,16 @@ void mainWidget::on_cbLegendItalic_clicked()
     chart->legend()->setFont(font);
 }
 
-/**
- * @brief mainWidget::on_dataError
- *
- * on_dataError槽接收dataworker的信号，
- * 当dataworker处理数据出错时，发送两个信号dataParseError和httpRequestError，
- * 该槽函数响应上述两个信号，使能界面上的各个按键，以保证程序正常运行
- *
- * @param error 具体的错误信息
- *
- */
-void mainWidget::on_dataError(QString error)
+void mainWidget::on_btnWeather_clicked()
 {
-    qDebug()<<error;
-    // 使能两个按钮
-    ui->comboMonth->setEnabled(true);
-    ui->btnStart->setEnabled(true);
+    qDebug()<<"click btnWeather";
+    switch_num=0;
+    worker->setSwitchNum(0);
+}
+
+void mainWidget::on_btnAQI_clicked()
+{
+    qDebug()<<"click btnAQI";
+    switch_num=1;
+    worker->setSwitchNum(1);
 }
